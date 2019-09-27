@@ -16,24 +16,20 @@ class MySQLDriver:
             database=os.environ['MY_SQL_DATABASE']
         )
 
-    def execute_query(self, query):
-        """
-
-        :rtype: object
-        """
+    def execute_query(self, query, alternative_result_mapping=False):
         cursor = self.database.cursor(named_tuple=True)
         cursor.execute(query)
         results = cursor.fetchall()
-        result_dict = {}
 
-        """
-        for r in results:
-            result_dict.append(dict(zip(cursor.column_names, r)))
-        """
-
-        for i, c in enumerate(cursor.column_names, start=0):
-            result_dict[c] = []
+        if alternative_result_mapping:
+            result_dict = []
             for r in results:
-                result_dict[c].append(str(r[i]))
+                result_dict.append(dict(zip(cursor.column_names, r)))
+        else:
+            result_dict = {}
+            for i, c in enumerate(cursor.column_names, start=0):
+                result_dict[c] = []
+                for r in results:
+                    result_dict[c].append(str(r[i]))
 
         return result_dict
