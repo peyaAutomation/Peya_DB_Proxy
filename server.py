@@ -1,10 +1,9 @@
 from flask_cors import CORS
 from flask import Flask, request
-from flask_dotenv import DotEnv
 from mysql.connector import ProgrammingError
 from libs.Utils import Utils
-from libs.MySQL_driver import MySQLDriver
 from services.AdminQueryService import AdminQueryService
+from services.QueryRunnerService import QueryRunnerService
 
 app = Flask(__name__)
 CORS(app)
@@ -88,7 +87,7 @@ def edit_query_predefined_by_id(query_id):
 def edit_query_predefined_by_name():
     name = request.args.get('name')
 
-    if name is not None and name != '':
+    if name is None and name != '':
         return app.response_class(
             response=Utils.json_response({
                 "error": "The param 'name' is required"
@@ -111,7 +110,6 @@ def edit_query_predefined_by_name():
                 mimetype='application/json'
             )
 
-    request.args.get('user')
     return app.response_class(
         response=Utils.json_response({
             "result": AdminQueryService.edit_query_by_name(name, data)
@@ -134,7 +132,7 @@ def delete_query_predefined_by_id(query_id):
 def delete_query_predefined_by_name():
     name = request.args.get('name')
 
-    if name is not None and name != '':
+    if name is None and name != '':
         return app.response_class(
             response=Utils.json_response({
                 "error": "The param 'name' is required"
@@ -152,21 +150,31 @@ def delete_query_predefined_by_name():
 
 @app.route('/', methods=["GET"])
 def execute_predefined_query():
-    error = True
-    if error:
+    name = request.args.get('name')
+
+    if name is None and name != '':
         return app.response_class(
             response=Utils.json_response({
-                "error": "Query not found"
+                "error": "The param 'name' is required"
             }),
-            status=404,
+            status=400,
             mimetype='application/json'
         )
-    else:
+
+    try:
         return app.response_class(
             response=Utils.json_response({
-                "result": ''
+                "result": QueryRunnerService.run_query_by_name(name)
             }),
             status=200,
+            mimetype='application/json'
+        )
+    except ProgrammingError as error:
+        return app.response_class(
+            response=Utils.json_response({
+                "error": str(error)
+            }),
+            status=400,
             mimetype='application/json'
         )
 
@@ -193,10 +201,14 @@ def execute_custom_query():
     if 'alternative_result_mapping' in data.keys():
         alternative_result_mapping = data['alternative_result_mapping']
 
-    driver_db = MySQLDriver()
-    driver_db.connect()
     try:
-        result = driver_db.execute_query(query=data['query'], alternative_result_mapping=alternative_result_mapping)
+        return app.response_class(
+            response=Utils.json_response({
+                "result": QueryRunnerService.run_custom_query(data['query'], alternative_result_mapping)
+            }),
+            status=200,
+            mimetype='application/json'
+        )
     except ProgrammingError as error:
         return app.response_class(
             response=Utils.json_response({
@@ -205,14 +217,6 @@ def execute_custom_query():
             status=400,
             mimetype='application/json'
         )
-
-    return app.response_class(
-        response=Utils.json_response({
-            "result": result
-        }),
-        status=200,
-        mimetype='application/json'
-    )
 
 
 app.run(host='0.0.0.0', port=4400, debug=True)

@@ -1,7 +1,7 @@
-import os
-
 import mysql
 from mysql.connector import MySQLConnection
+
+from libs.Utils import Utils
 
 
 class MySQLDriver:
@@ -9,11 +9,11 @@ class MySQLDriver:
 
     def connect(self):
         self.database = mysql.connector.connect(
-            user=os.environ['MY_SQL_USER'],
-            password=os.environ['MY_SQL_PASS'],
-            host=os.environ['MY_SQL_HOST'],
-            port=int(os.environ['MY_SQL_PORT']),
-            database=os.environ['MY_SQL_DATABASE']
+            user=Utils.get_env_var('MY_SQL_USER'),
+            password=Utils.get_env_var('MY_SQL_PASS'),
+            host=Utils.get_env_var('MY_SQL_HOST'),
+            port=int(Utils.get_env_var('MY_SQL_PORT')),
+            database=Utils.get_env_var('MY_SQL_DATABASE')
         )
 
     def execute_query(self, query, alternative_result_mapping=False):

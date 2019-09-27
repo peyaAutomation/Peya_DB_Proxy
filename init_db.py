@@ -1,15 +1,9 @@
-from peewee import *
+from peewee import MySQLDatabase
+
 from libs.Utils import Utils
+from models.models import QueryEntity
 
-
-class UnknownField(object):
-    def __init__(self, *_, **__): pass
-
-
-class BaseModel(Model):
-
-    class Meta:
-        database = MySQLDatabase(
+db = MySQLDatabase(
             Utils.get_env_var('MY_SQL_DATABASE_QUERY_REPO'),
             **{
                 'charset': 'utf8',
@@ -21,12 +15,9 @@ class BaseModel(Model):
             }
         )
 
+tables = [
+    QueryEntity
+]
 
-class QueryEntity(BaseModel):
-
-    id = AutoField(db_column='query_id')
-    name = CharField(db_column='query_name', unique=True, default='')
-    query = TextField(db_column='query_sql', default='')
-
-    class Meta:
-        table_name = 'query'
+db.drop_tables(tables)
+db.create_tables(tables)

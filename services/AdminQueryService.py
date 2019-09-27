@@ -14,11 +14,11 @@ class AdminQueryService:
 
     @staticmethod
     def get_one_query_by_id(query_id):
-        return QueryEntity().select().where(QueryEntity.id == query_id).dicts().get()
+        return QueryEntity().select().where(QueryEntity.id == query_id).dicts().first()
 
     @staticmethod
     def get_one_query_by_name(query_name):
-        return QueryEntity().select().where(QueryEntity.name == query_name).dicts().get()
+        return QueryEntity().select().where(QueryEntity.name == query_name).dicts().first()
 
     @staticmethod
     def create_query(query_data):
