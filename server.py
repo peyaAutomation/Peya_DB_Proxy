@@ -33,7 +33,6 @@ def view_query_predefined_by_id(query_id):
 
 @app.route('/queries', methods=["POST"])
 def create_query_predefined():
-
     data = request.json
 
     required_fields = ['name', 'query']
@@ -59,7 +58,6 @@ def create_query_predefined():
 
 @app.route('/queries/<query_id>', methods=["PUT"])
 def edit_query_predefined_by_id(query_id):
-
     data = request.json
 
     required_fields = ['name', 'query']
@@ -181,7 +179,6 @@ def execute_predefined_query():
 
 @app.route('/', methods=["POST"])
 def execute_custom_query():
-
     data = request.json
 
     required_fields = ['query']
@@ -195,6 +192,18 @@ def execute_custom_query():
                 status=400,
                 mimetype='application/json'
             )
+    lower_query = str.lower(data['query'])
+    black_list_statements = ['insert ', 'update ', 'delete ', 'drop table', 'create ',
+                             'truncate ', 'backup ', 'alter table']
+
+    if [statement for statement in black_list_statements if (statement in lower_query)]:
+        return app.response_class(
+            response=Utils.json_response({
+                "error": "Forbidden. You can't execute this query."
+            }),
+            status=403,
+            mimetype='application/json'
+        )
 
     alternative_result_mapping = False
 
@@ -205,6 +214,68 @@ def execute_custom_query():
         return app.response_class(
             response=Utils.json_response({
                 "result": QueryRunnerService.run_custom_query(data['query'], alternative_result_mapping)
+            }),
+            status=200,
+            mimetype='application/json'
+        )
+    except ProgrammingError as error:
+        return app.response_class(
+            response=Utils.json_response({
+                "error": str(error)
+            }),
+            status=400,
+            mimetype='application/json'
+        )
+
+
+@app.route('/user/updatephone', methods=["POST"])
+def execute_update_user_phone():
+    data = request.json
+    query = """UPDATE peyadb.user set mobile = %s where email = %s;"""
+    required_fields = ['mobile', 'email']
+
+    return __execute(query, data, required_fields)
+
+
+@app.route('/restaurant/updateaceptspreorder', methods=["POST"])
+def execute_update_restaurant_pre_order():
+    data = request.json
+    query = """UPDATE peyadb.restaurant set accepts_pre_order = %s where name = %s;"""
+    required_fields = ['accepts_pre_order', 'name']
+
+    return __execute(query, data, required_fields)
+
+
+def __get_query_data(required_fields, data):
+    query_data = []
+    for f in required_fields:
+        query_data.append(data[f])
+    return tuple(query_data)
+
+
+def __execute(query, data, required_fields):
+
+    for f in required_fields:
+        if f not in data.keys():
+            return app.response_class(
+                response=Utils.json_response({
+                    "error": "The field '%s' is required" % f
+                }),
+                status=400,
+                mimetype='application/json'
+            )
+
+    query_data = __get_query_data(required_fields, data)
+
+    alternative_result_mapping = False
+
+    if 'alternative_result_mapping' in data.keys():
+        alternative_result_mapping = data['alternative_result_mapping']
+
+    try:
+        return app.response_class(
+            response=Utils.json_response({
+                "result": QueryRunnerService.run_custom_query(query, alternative_result_mapping, query_data)
             }),
             status=200,
             mimetype='application/json'
