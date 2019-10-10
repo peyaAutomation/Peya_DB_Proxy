@@ -210,10 +210,24 @@ def execute_custom_query():
     if 'alternative_result_mapping' in data.keys():
         alternative_result_mapping = data['alternative_result_mapping']
 
+    database = 'peyadb'
+
+    if 'data_base' in data.keys():
+        database = data['data_base']
+        if Utils.get_env_var(str.upper(database)) is None:
+            return app.response_class(
+                response=Utils.json_response({
+                    "error": "Check database name provided"
+                }),
+                status=403,
+                mimetype='application/json'
+            )
+
     try:
         return app.response_class(
             response=Utils.json_response({
-                "result": QueryRunnerService.run_custom_query(data['query'], alternative_result_mapping)
+                "result": QueryRunnerService.run_custom_query(data['query'], alternative_result_mapping,
+                                                              database=database)
             }),
             status=200,
             mimetype='application/json'
@@ -272,10 +286,23 @@ def __execute(query, data, required_fields):
     if 'alternative_result_mapping' in data.keys():
         alternative_result_mapping = data['alternative_result_mapping']
 
+    database = 'peyadb'
+
+    if 'data_base' in data.keys():
+        database = data['data_base']
+        if Utils.get_env_var(str.upper(database)) is None:
+            return app.response_class(
+                response=Utils.json_response({
+                    "error": "Check database name provided"
+                }),
+                status=404,
+                mimetype='application/json'
+            )
+
     try:
         return app.response_class(
             response=Utils.json_response({
-                "result": QueryRunnerService.run_custom_query(query, alternative_result_mapping, query_data)
+                "result": QueryRunnerService.run_custom_query(query, alternative_result_mapping, query_data, database)
             }),
             status=200,
             mimetype='application/json'
