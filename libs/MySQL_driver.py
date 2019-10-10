@@ -7,13 +7,15 @@ from libs.Utils import Utils
 class MySQLDriver:
     database: MySQLConnection
 
-    def connect(self):
+    def connect(self, database='peyadb'):
+        prefix = Utils.get_env_var(str.upper(database))
+
         self.database = mysql.connector.connect(
-            user=Utils.get_env_var('MY_SQL_USER'),
-            password=Utils.get_env_var('MY_SQL_PASS'),
-            host=Utils.get_env_var('MY_SQL_HOST'),
-            port=int(Utils.get_env_var('MY_SQL_PORT')),
-            database=Utils.get_env_var('MY_SQL_DATABASE')
+            user=Utils.get_env_var('MY_SQL_USER' + prefix),
+            password=Utils.get_env_var('MY_SQL_PASS' + prefix),
+            host=Utils.get_env_var('MY_SQL_HOST' + prefix),
+            port=int(Utils.get_env_var('MY_SQL_PORT' + prefix)),
+            database=Utils.get_env_var('MY_SQL_DATABASE' + prefix)
         )
 
     def execute_query(self, query, alternative_result_mapping, data):
