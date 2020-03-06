@@ -18,6 +18,12 @@ class MySQLDriver:
             database=Utils.get_env_var('MY_SQL_DATABASE' + prefix)
         )
 
+    def close_connection(self):
+        self.database.close()
+
+    def check_connection(self):
+        return self.database.is_connected()
+
     def execute_query(self, query, alternative_result_mapping, data):
         cursor = self.database.cursor(named_tuple=True)
         cursor.execute(query, data)

@@ -1,12 +1,38 @@
 from flask_cors import CORS
 from flask import Flask, request
-from mysql.connector import ProgrammingError
+from mysql.connector import ProgrammingError, errors
 from libs.Utils import Utils
 from services.AdminQueryService import AdminQueryService
 from services.QueryRunnerService import QueryRunnerService
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.route('/check', methods=["GET"])
+def check_server():
+    return app.response_class(
+        response=Utils.json_response({'message': '', 'status': 'online'}),
+        status=200,
+        mimetype='application/json'
+    )
+
+
+@app.route('/check_jumper', methods=["GET"])
+def check_jumper():
+    jumper_status = QueryRunnerService.check_connection()
+    if jumper_status:
+        response = {'message': '', 'status': 'online'}
+        status_code = 200
+    else:
+        response = {'message': 'Jumper may be offline', 'status': 'offline'}
+        status_code = 200
+
+    return app.response_class(
+        response=Utils.json_response(response),
+        status=200,
+        mimetype='application/json'
+    )
 
 
 @app.route('/queries', methods=["GET"])
@@ -240,6 +266,14 @@ def execute_custom_query():
             status=400,
             mimetype='application/json'
         )
+    except errors.DatabaseError as db_error:
+        return app.response_class(
+            response=Utils.json_response({
+                "error": str(db_error)
+            }),
+            status=400,
+            mimetype='application/json'
+        )
 
 
 @app.route('/user/updatephone', methods=["POST"])
@@ -315,6 +349,14 @@ def __execute(query, data, required_fields):
             status=400,
             mimetype='application/json'
         )
+    except errors.DatabaseError as db_error:
+        return app.response_class(
+            response=Utils.json_response({
+                "error": str(db_error)
+            }),
+            status=400,
+            mimetype='application/json'
+        )
 
 
-app.run(host='0.0.0.0', port=4000, debug=True)
+app.run(host='0.0.0.0', port=4500, debug=True)

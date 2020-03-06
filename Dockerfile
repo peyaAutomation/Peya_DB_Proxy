@@ -12,6 +12,6 @@ RUN pip3 install -r requirements.txt
 
 COPY . /app/
 
-EXPOSE 4000
+EXPOSE 4500
 
 CMD ["python3", "server.py"]
